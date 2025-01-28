@@ -64,6 +64,7 @@
                         <td>${row.titulo}</td>
                         <td>${row.objeto}</td>
                         <td><a href="${row.url}" target="_blank">${row.url}</a></td>
+                        <td>${row.fecha_hora}</td> <!-- Agregamos la fecha y hora -->
                     `;
                     tbody.appendChild(tr);
                 });
@@ -91,9 +92,9 @@
 
             // Agregar la tabla al PDF
             doc.autoTable({
-                head: [['Título', 'Objeto', 'URL']],
+                head: [['Título', 'Objeto', 'URL', 'Fecha y Hora']], // Agregamos 'Fecha y Hora' al encabezado
                 body: tableData,
-                startY: 20, // Para que  tabla no se superponga al título
+                startY: 20, // Para que la tabla no se superponga al título
             });
 
             // Descargar el PDF
