@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos Scrapeados</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Datos Scrapeados</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Objeto</th>
+                <th>URL</th>
+            </tr>
+        </thead>
+        <tbody id="data-body">
+            <!-- Aquí se insertarán los datos desde la base de datos -->
+        </tbody>
+    </table>
+    <script>
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('data-body');
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${row.titulo}</td>
+                        <td>${row.objeto}</td>
+                        <td><a href="${row.url}">${row.url}</a></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error al cargar los datos:', error));
+    </script>
+</body>
+</html>
