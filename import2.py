@@ -19,22 +19,13 @@ if response.status_code == 200:
     # Conectar a la base de datos MySQL
     db = mysql.connector.connect(
         host="localhost",
-        user="tu_usuario",
-        password="tu_contraseña",
-        database="nombre_base_datos"
+        user="root",
+        password="",
+        database="webscraping"
     )
 
     cursor = db.cursor()
 
-    # Crear la tabla si no existe
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS scraped_data (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        titulo VARCHAR(255),
-        objeto TEXT,
-        url TEXT
-    )
-    """)
 
     for contenedor in contenedores:
         # Buscar todas las etiquetas <p> dentro del contenedor

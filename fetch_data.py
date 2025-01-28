@@ -6,7 +6,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     password="",
-    database="WebScraping"
+    database="webscraping"
 )
 
 cursor = db.cursor()
