@@ -17,23 +17,43 @@
         th {
             background-color: #f2f2f2;
         }
+        button {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <h1>Datos Scrapeados</h1>
+    <button id="download-pdf">Generar PDF</button>
     <table>
         <thead>
             <tr>
                 <th>Título</th>
                 <th>Objeto</th>
                 <th>URL</th>
+                <th>Fecha y Hora</th>
             </tr>
         </thead>
         <tbody id="data-body">
-            <!-- Aquí se insertarán los datos desde la base de datos -->
+            <!-- Aquí se insertarán los datos desde el archivo JSON -->
         </tbody>
     </table>
+
+    <!-- Incluir la librería jsPDF y autoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.22/jspdf.plugin.autotable.min.js"></script>
+
     <script>
+        // Cargar los datos desde el archivo JSON
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
@@ -43,12 +63,42 @@
                     tr.innerHTML = `
                         <td>${row.titulo}</td>
                         <td>${row.objeto}</td>
-                        <td><a href="${row.url}">${row.url}</a></td>
+                        <td><a href="${row.url}" target="_blank">${row.url}</a></td>
                     `;
                     tbody.appendChild(tr);
                 });
             })
             .catch(error => console.error('Error al cargar los datos:', error));
+
+        // Función para generar el PDF
+        document.getElementById('download-pdf').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFont("helvetica", "normal");
+            
+            // Título
+            doc.text('Datos Scrapeados', 14, 10);
+            
+            // Establecer la tabla
+            const tableData = [];
+            document.querySelectorAll('#data-body tr').forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    rowData.push(cell.innerText);
+                });
+                tableData.push(rowData);
+            });
+
+            // Agregar la tabla al PDF
+            doc.autoTable({
+                head: [['Título', 'Objeto', 'URL']],
+                body: tableData,
+                startY: 20, // Para que  tabla no se superponga al título
+            });
+
+            // Descargar el PDF
+            doc.save('datos_scrapeados.pdf');
+        });
     </script>
 </body>
 </html>
