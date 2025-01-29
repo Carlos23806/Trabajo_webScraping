@@ -5,10 +5,11 @@ import threading
 import time
 import pymysql
 import os
+import schedule
 
 def setup_clean_database():
     try:
-        print("\n=== Limpiando y preparando base de datos ===")
+        print("\n=== Verificando base de datos ===")
         db = pymysql.connect(
             host='localhost',
             user='root',
@@ -16,10 +17,9 @@ def setup_clean_database():
         )
         cursor = db.cursor()
         
-        # Eliminar y recrear la base de datos
-        #cursor.execute("DROP DATABASE IF EXISTS webscraping")
+        # Solo crear la base de datos si no existe
         cursor.execute("CREATE DATABASE IF NOT EXISTS webscraping")
-        print("Base de datos recreada exitosamente")
+        print("Base de datos verificada exitosamente")
         
         db.close()
         return True
@@ -41,41 +41,38 @@ def run_server():
     print("Servidor iniciado en http://localhost:8000/display_data.html")
     server.serve_forever()
 
-def main():
-    # Limpiar JSON anterior
+def update_data():
+    print("\n=== Actualizando datos ===")
     clean_json()
-    
-    # Limpiar y preparar base de datos
-    if not setup_clean_database():
-        print("Error: No se pudo preparar la base de datos")
-        return
-    
-    # Ejecutar scripts de scraping y generación de JSON
-    print("\n=== Iniciando web scraping ===")
     subprocess.run(["python", "import2.py"])
-    
-    print("\n=== Generando nuevo JSON ===")
     subprocess.run(["python", "fetch_data.py"])
+    print("Actualización completada")
+
+def main():
+    # Configuración inicial
+    setup_clean_database()
     
-    print("\n=== Iniciando servicio de email ===")
-    # Iniciar el enviador de correos en un hilo separado
+    # Primera ejecución
+    update_data()
+    
+    schedule.every(24).hours.do(update_data)
+    
+    # Iniciar servicio de email
     import email_sender
     email_thread = threading.Thread(target=email_sender.run_scheduler, daemon=True)
     email_thread.start()
     
-    # Iniciar servidor en un hilo separado
+    # Iniciar servidor
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
     
-    # Esperar un momento para que el servidor inicie
+    # Abrir navegador
     time.sleep(1)
-    
-    # Abrir el navegador
     webbrowser.open('http://localhost:8000/display_data.html')
     
     try:
-        # Mantener el programa corriendo
         while True:
+            schedule.run_pending()
             time.sleep(1)
     except KeyboardInterrupt:
         print("\nCerrando el servidor...")
