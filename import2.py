@@ -32,8 +32,10 @@ def setup_database():
             titulo VARCHAR(500),
             objeto TEXT,
             url VARCHAR(500),
-            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )""")
+            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            enviado BOOLEAN DEFAULT FALSE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """)
         
         db.commit()
         print("Base de datos configurada correctamente")
@@ -62,35 +64,35 @@ if response.status_code == 200:
     db, cursor = setup_database()
 
     for contenedor in contenedores:
-        # Buscar todas las etiquetas <p> dentro del contenedor
         Titulo = contenedor.find("h4").text.strip() if contenedor.find("h4") else "No encontrado"
         print(f"Titulo: {Titulo}")
-        parrafos = contenedor.find_all("p")
         
-        # Obtener el texto completo del objeto, ignorando el párrafo que solo contiene "Objeto:"
-        objeto = None
+        # Modificar la lógica para obtener el objeto
+        parrafos = contenedor.find_all("p")
+        objeto_completo = ""
+        
         for parrafo in parrafos:
             texto = parrafo.text.strip()
-            if texto and texto.lower() != "objeto:":
-                objeto = texto
+            if texto.lower() != "objeto:" and len(texto) > 10:
+                objeto_completo = texto
                 break
-        
-        if not objeto:
-            objeto = "No encontrado"
+                
+        if not objeto_completo:
+            continue  # Saltar este registro si no hay objeto válido
             
         # Buscar el enlace del botón "Ver más" dentro del mismo contenedor
         boton = contenedor.find("a", href=True)
         link = boton["href"] if boton else "No encontrado"
         
         # Imprimir la información
-        print(f"Objeto: {objeto}")    
+        print(f"Objeto: {objeto_completo}")    
         print(f"URL: https://etb.com/Corporativo/{link}")
         
         # Insertar los datos en la base de datos
         cursor.execute("""
-        INSERT INTO scraped_data (titulo, objeto, url)
-        VALUES (%s, %s, %s)
-        """, (Titulo, objeto, f"https://etb.com/Corporativo/{link}"))
+        INSERT INTO scraped_data (titulo, objeto, url, enviado)
+        VALUES (%s, %s, %s, FALSE)
+        """, (Titulo, objeto_completo, f"https://etb.com/Corporativo/{link}"))
 
     # Confirmar los cambios en la base de datos
     db.commit()
