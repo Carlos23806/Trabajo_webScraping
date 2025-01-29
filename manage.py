@@ -3,6 +3,28 @@ import webbrowser
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import threading
 import time
+import pymysql
+
+def setup_clean_database():
+    try:
+        print("\n=== Limpiando y preparando base de datos ===")
+        db = pymysql.connect(
+            host='localhost',
+            user='root',
+            password=''
+        )
+        cursor = db.cursor()
+        
+        # Eliminar y recrear la base de datos
+        cursor.execute("DROP DATABASE IF EXISTS webscraping")
+        cursor.execute("CREATE DATABASE webscraping")
+        print("Base de datos recreada exitosamente")
+        
+        db.close()
+        return True
+    except Exception as e:
+        print(f"Error preparando la base de datos: {e}")
+        return False
 
 def run_server():
     server = HTTPServer(('localhost', 8000), SimpleHTTPRequestHandler)
@@ -10,11 +32,16 @@ def run_server():
     server.serve_forever()
 
 def main():
+    # Limpiar y preparar base de datos
+    if not setup_clean_database():
+        print("Error: No se pudo preparar la base de datos")
+        return
+    
     # Ejecutar scripts de scraping y generación de JSON
-    print("Ejecutando import2.py...")
+    print("\n=== Iniciando web scraping ===")
     subprocess.run(["python", "import2.py"])
     
-    print("Ejecutando fetch_data.py...")
+    print("\n=== Generando JSON ===")
     subprocess.run(["python", "fetch_data.py"])
     
     # Iniciar servidor en un hilo separado

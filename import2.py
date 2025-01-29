@@ -66,23 +66,31 @@ if response.status_code == 200:
         Titulo = contenedor.find("h4").text.strip() if contenedor.find("h4") else "No encontrado"
         print(f"Titulo: {Titulo}")
         parrafos = contenedor.find_all("p")
-        for i, parrafo in enumerate(parrafos[:2]):
-            # Obtener el texto de cada etiqueta <p>
-            objeto = parrafo.text.strip()
+        
+        # Obtener el texto completo del objeto, ignorando el párrafo que solo contiene "Objeto:"
+        objeto = None
+        for parrafo in parrafos:
+            texto = parrafo.text.strip()
+            if texto and texto.lower() != "objeto:":
+                objeto = texto
+                break
+        
+        if not objeto:
+            objeto = "No encontrado"
             
-            # Buscar el enlace del botón "Ver más" dentro del mismo contenedor
-            boton = contenedor.find("a", href=True)
-            link = boton["href"] if boton else "No encontrado"
-            
-            # Imprimir la información
-            print(f"Objeto: {objeto}")    
-            print(f"URL: https://etb.com/Corporativo/{link}")
-            
-            # Insertar los datos en la base de datos
-            cursor.execute("""
-            INSERT INTO scraped_data (titulo, objeto, url)
-            VALUES (%s, %s, %s)
-            """, (Titulo, objeto, f"https://etb.com/Corporativo/{link}"))
+        # Buscar el enlace del botón "Ver más" dentro del mismo contenedor
+        boton = contenedor.find("a", href=True)
+        link = boton["href"] if boton else "No encontrado"
+        
+        # Imprimir la información
+        print(f"Objeto: {objeto}")    
+        print(f"URL: https://etb.com/Corporativo/{link}")
+        
+        # Insertar los datos en la base de datos
+        cursor.execute("""
+        INSERT INTO scraped_data (titulo, objeto, url)
+        VALUES (%s, %s, %s)
+        """, (Titulo, objeto, f"https://etb.com/Corporativo/{link}"))
 
     # Confirmar los cambios en la base de datos
     db.commit()
