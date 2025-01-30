@@ -5,6 +5,7 @@ from email.mime.multipart import MIMEMultipart
 import time
 from datetime import datetime
 import schedule
+from db_connection import get_connection
 
 # Configuración del correo
 SENDER_EMAIL = "colvainnovacolvatel@gmail.com"
@@ -21,7 +22,9 @@ def connect_db():
 
 def get_new_records():
     try:
-        db = connect_db()
+        db = get_connection()
+        if not db:
+            return None, None, []
         cursor = db.cursor()
         
         # Añadido logging para verificar la consulta
@@ -183,7 +186,6 @@ def check_and_send():
             print("✗ Error de conexión a la base de datos")
             return
         
-        # Siempre enviar email, con o sin registros
         if send_email(records):
             print("✓ Email enviado exitosamente")
             if records:
@@ -206,9 +208,6 @@ def run_scheduler():
     
     # Ejecutar inmediatamente la primera vez
     check_and_send()
-    
-    # Programar para ejecutar cada 20 minutos
-    schedule.every(24).hours.do(check_and_send)
     
     try:
         while True:

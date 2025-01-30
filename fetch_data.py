@@ -1,16 +1,13 @@
-import pymysql
 import json
+from db_connection import get_connection
 
 def create_json():
     try:
-        print("Conectando al servidor MySQL con pymysql...")
-        db = pymysql.connect(
-            host='localhost',
-            user='root',
-            password='',
-            database='webscraping'
-        )
-        print("Conexión exitosa")
+        print("Conectando al servidor MySQL...")
+        db = get_connection()
+        if not db:
+            return
+            
         cursor = db.cursor()
 
         # Modificar la consulta SQL para filtrar registros no deseados
