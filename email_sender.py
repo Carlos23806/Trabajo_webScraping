@@ -11,16 +11,12 @@ SENDER_EMAIL = "colvainnovacolvatel@gmail.com"
 SENDER_PASSWORD = "dcbk bgzl fxhd dbmj" 
 RECEIVER_EMAIL = "cm2873640@gmail.com"
 
-
 def get_new_records():
     try:
         db = get_connection()
         if not db:
             return None, None, []
         cursor = db.cursor()
-        
-        # Añadido logging para verificar la consulta
-        print("Ejecutando consulta para obtener registros no enviados...")
         
         query = """
             SELECT id, titulo, objeto, url, fecha_creacion 
@@ -31,15 +27,8 @@ def get_new_records():
             AND objeto != 'Objeto:'
         """
         
-        print(f"Query: {query}")
         cursor.execute(query)
         records = cursor.fetchall()
-        
-        # Añadido logging para verificar resultados
-        print(f"Registros encontrados: {len(records)}")
-        for record in records:
-            print(f"ID: {record[0]}, enviado: 0, título: {record[1]}")
-            
         return db, cursor, records
     except Exception as e:
         print(f"Error obteniendo registros: {e}")
@@ -68,7 +57,6 @@ def format_email_content(records):
         """ % datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         return html_template
 
-    # Si hay registros, usar el formato existente
     html = """
     <html>
     <head>
@@ -135,36 +123,15 @@ def update_sent_status(db, cursor, records):
     try:
         if not records:
             return
-        
         ids = [str(record[0]) for record in records]
-        
-        # Verificar el estado actual antes de actualizar
-        verify_query = f"SELECT id, enviado FROM scraped_data WHERE id IN ({','.join(ids)})"
-        print(f"Verificando estado actual: {verify_query}")
-        cursor.execute(verify_query)
-        current_states = cursor.fetchall()
-        for state in current_states:
-            print(f"Estado actual - ID: {state[0]}, enviado: {state[1]}")
-        
-        # Actualizar solo si el estado es 0
         query = """
             UPDATE scraped_data 
             SET enviado = 1 
             WHERE id IN ({}) 
             AND enviado = 0
         """.format(','.join(ids))
-        
-        print(f"Ejecutando actualización: {query}")
         cursor.execute(query)
         db.commit()
-        
-        # Verificar después de la actualización
-        cursor.execute(verify_query)
-        updated_states = cursor.fetchall()
-        print("\nEstados después de la actualización:")
-        for state in updated_states:
-            print(f"ID: {state[0]}, enviado: {state[1]}")
-            
     except Exception as e:
         print(f"✗ Error actualizando estados: {e}")
         db.rollback()
@@ -173,18 +140,12 @@ def check_and_send():
     print(f"\n=== Verificación de registros {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
     try:
         db, cursor, records = get_new_records()
-        
         if not db or not cursor:
             print("✗ Error de conexión a la base de datos")
             return
-        
         if send_email(records):
-            print("✓ Email enviado exitosamente")
             if records:
                 update_sent_status(db, cursor, records)
-        else:
-            print("✗ Error al enviar email")
-            
     except Exception as e:
         print(f"✗ Error en check_and_send: {e}")
     finally:
@@ -194,22 +155,18 @@ def check_and_send():
 
 def run_scheduler():
     print("\n=== Iniciando servicio de notificaciones ===")
-    print("• Se verificarán nuevos registros cada 5 minutos")
+    print("• El correo se enviará todos los días a las 8:00 AM")
     print("• Presione Ctrl+C para detener el servicio")
     print("-" * 50)
     
-    # Ejecutar inmediatamente la primera vez
-    check_and_send()
-    
-    # Programar para ejecutar cada 5 minutos
-    schedule.every(5).minutes.do(check_and_send)
+    schedule.every().day.at("20:21").do(check_and_send)
     
     try:
         while True:
             schedule.run_pending()
-            time.sleep(60)
+            time.sleep(60)  # Revisar cada minuto si es la hora de ejecución
     except KeyboardInterrupt:
         print("\n=== Servicio de notificaciones detenido ===")
 
-if __name__ == "__main__":
+if __name__ == "_main_":
     run_scheduler()
