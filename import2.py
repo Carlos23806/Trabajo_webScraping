@@ -1,45 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-import pymysql
 import sys
 import re
-import time
-
-def setup_database():
-    try:
-        print("Conectando al servidor MySQL con pymysql...")
-        db = pymysql.connect(
-            host='localhost',
-            user='root',
-            password=''
-        )
-        print("Conexión exitosa")
-        cursor = db.cursor()
-        
-        # Crear la base de datos si no existe
-        cursor.execute("CREATE DATABASE IF NOT EXISTS webscraping")
-        cursor.execute("USE webscraping")
-        
-        # Crear la tabla si no existe
-        print("Verificando tabla...")
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS scraped_data (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            titulo VARCHAR(500) unique,
-            objeto TEXT,
-            url VARCHAR(500),
-            fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            enviado INT DEFAULT 0
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        """)
-        
-        db.commit()
-        print("Base de datos verificada correctamente")
-        return db, cursor
-    
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+from db_connection import setup_database
 
 def extract_invitation_number(title):
     # Buscar un patrón de 10 dígitos después de "No."
@@ -70,6 +33,9 @@ if response.status_code == 200:
     # Conectar a la base de datos MySQL
     print("intentando la conexion con la base de datos")
     db, cursor = setup_database()
+    if not db or not cursor:
+        print("Error: No se pudo conectar a la base de datos")
+        sys.exit(1)
 
     for contenedor in contenedores:
         Titulo = contenedor.find("h4").text.strip() if contenedor.find("h4") else "No encontrado"

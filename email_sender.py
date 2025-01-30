@@ -1,4 +1,3 @@
-import pymysql
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -195,12 +194,15 @@ def check_and_send():
 
 def run_scheduler():
     print("\n=== Iniciando servicio de notificaciones ===")
-    print("• Se verificarán nuevos registros cada 20 minutos")
+    print("• Se verificarán nuevos registros cada 5 minutos")
     print("• Presione Ctrl+C para detener el servicio")
     print("-" * 50)
     
     # Ejecutar inmediatamente la primera vez
     check_and_send()
+    
+    # Programar para ejecutar cada 5 minutos
+    schedule.every(5).minutes.do(check_and_send)
     
     try:
         while True:

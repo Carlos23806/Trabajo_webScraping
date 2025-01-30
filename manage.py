@@ -3,6 +3,8 @@ import time
 import os
 import schedule
 from db_connection import setup_database
+import threading
+import email_sender
 
 def setup_clean_database():
     db, cursor = setup_database()
@@ -26,9 +28,9 @@ def main():
     # Actualizar datos cada 5 minutos
     schedule.every(5).minutes.do(update_data)
     
-    # Iniciar servicio de email
-    import email_sender
-    email_sender.run_scheduler()
+    # Iniciar servicio de email en un hilo separado
+    email_thread = threading.Thread(target=email_sender.run_scheduler, daemon=True)
+    email_thread.start()
     
     try:
         while True:
