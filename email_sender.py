@@ -12,13 +12,6 @@ SENDER_EMAIL = "colvainnovacolvatel@gmail.com"
 SENDER_PASSWORD = "dcbk bgzl fxhd dbmj" 
 RECEIVER_EMAIL = "cm2873640@gmail.com"
 
-def connect_db():
-    return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='',
-        database='webscraping'
-    )
 
 def get_new_records():
     try:
